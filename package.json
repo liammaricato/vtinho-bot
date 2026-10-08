@@ -1,0 +1,17 @@
+{
+  "name": "vtinho-bot",
+  "version": "1.0.0",
+  "description": "Discord bot that replies with a random message when mentioned",
+  "main": "src/index.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "discord.js": "^14.27.0"
+  }
+}
