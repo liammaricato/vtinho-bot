@@ -1,5 +1,7 @@
-import { Client, Events, GatewayIntentBits } from 'discord.js';
+import { Client, Events, GatewayIntentBits, Partials } from 'discord.js';
 import { messages } from './messages.js';
+
+const TRIGGER_EMOJI = 'vtinho';
 
 const token = process.env.DISCORD_TOKEN;
 if (!token) {
@@ -8,8 +10,23 @@ if (!token) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+  ],
+  // Without these, reactions on messages sent before the bot started are silently dropped.
+  partials: [Partials.Message, Partials.Reaction],
 });
+
+async function replyWithRandomMessage(message) {
+  const reply = messages[Math.floor(Math.random() * messages.length)];
+  try {
+    await message.reply(reply);
+  } catch (error) {
+    console.error('Failed to send reply:', error);
+  }
+}
 
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`Logged in as ${readyClient.user.tag}`);
@@ -25,12 +42,14 @@ client.on(Events.MessageCreate, async (message) => {
   });
   if (!mentioned) return;
 
-  const reply = messages[Math.floor(Math.random() * messages.length)];
-  try {
-    await message.reply(reply);
-  } catch (error) {
-    console.error('Failed to send reply:', error);
-  }
+  await replyWithRandomMessage(message);
+});
+
+client.on(Events.MessageReactionAdd, async (reaction, user) => {
+  if (user.bot) return;
+  if (reaction.emoji.name !== TRIGGER_EMOJI) return;
+
+  await replyWithRandomMessage(reaction.message);
 });
 
 // Docker sends SIGTERM on stop; disconnect cleanly so the bot goes offline right away.
